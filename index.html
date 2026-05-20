@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scientific Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="src/state.js"></script>
+    <script defer src="src/operations.js"></script>
+    <script defer src="src/main.js"></script>
+</head>
+<body>
+    <div class="floating-background" aria-hidden="true">
+        <span style="--x: 8%; --delay: 0s; --duration: 18s;">sin</span>
+        <span style="--x: 22%; --delay: 3s; --duration: 22s;">&pi;</span>
+        <span style="--x: 38%; --delay: 1s; --duration: 20s;">&radic;</span>
+        <span style="--x: 54%; --delay: 5s; --duration: 24s;">log</span>
+        <span style="--x: 70%; --delay: 2s; --duration: 19s;">&Sigma;</span>
+        <span style="--x: 86%; --delay: 6s; --duration: 21s;">e</span>
+        <span style="--x: 94%; --delay: 4s; --duration: 23s;">x&sup2;</span>
+    </div>
+
+    <main class="app-shell">
+        <section class="calculator" aria-label="Scientific calculator">
+            <div class="brand-row">
+                <div>
+                    <p class="eyebrow">Scientific</p>
+                    <h1>Calci</h1>
+                </div>
+                <div class="control-group">
+                    <button type="button" class="mode-toggle" id="angle-mode">DEG</button>
+                    <button type="button" class="mode-toggle" id="sound-toggle" aria-label="Toggle click sound">Sound</button>
+                </div>
+            </div>
+
+            <div class="calculator-screen-container" aria-live="polite">
+                <div class="history-screen" id="history" aria-label="Calculation history"></div>
+                <input type="text" class="calculator-screen" id="display" value="0" disabled aria-label="Current expression">
+            </div>
+
+            <div class="calculator-keys">
+                <button type="button" class="utility" data-action="clear">AC</button>
+                <button type="button" class="utility" data-action="delete">DEL</button>
+                <button type="button" class="utility" data-action="sign">+/-</button>
+                <button type="button" class="science" data-action="percent">%</button>
+                <button type="button" class="operator" data-action="operator" data-value="/">&#247;</button>
+
+                <button type="button" class="science" data-action="function" data-value="sin">sin</button>
+                <button type="button" class="science" data-action="function" data-value="cos">cos</button>
+                <button type="button" class="science" data-action="function" data-value="tan">tan</button>
+                <button type="button" class="science" data-action="function" data-value="sqrt">&radic;</button>
+                <button type="button" class="operator" data-action="operator" data-value="*">&#215;</button>
+
+                <button type="button" class="science" data-action="function" data-value="log">log</button>
+                <button type="button" class="science" data-action="function" data-value="ln">ln</button>
+                <button type="button" class="science" data-action="operator" data-value="^">x<sup>y</sup></button>
+                <button type="button" class="science" data-action="paren" data-value="(">(</button>
+                <button type="button" class="science" data-action="paren" data-value=")">)</button>
+
+                <button type="button" data-action="digit" data-value="7">7</button>
+                <button type="button" data-action="digit" data-value="8">8</button>
+                <button type="button" data-action="digit" data-value="9">9</button>
+                <button type="button" class="science" data-action="constant" data-value="pi">&pi;</button>
+                <button type="button" class="operator" data-action="operator" data-value="-">-</button>
+
+                <button type="button" data-action="digit" data-value="4">4</button>
+                <button type="button" data-action="digit" data-value="5">5</button>
+                <button type="button" data-action="digit" data-value="6">6</button>
+                <button type="button" class="science" data-action="constant" data-value="e">e</button>
+                <button type="button" class="operator" data-action="operator" data-value="+">+</button>
+
+                <button type="button" data-action="digit" data-value="1">1</button>
+                <button type="button" data-action="digit" data-value="2">2</button>
+                <button type="button" data-action="digit" data-value="3">3</button>
+                <button type="button" class="zero-btn" data-action="digit" data-value="0">0</button>
+                <button type="button" data-action="decimal" data-value=".">.</button>
+                <button type="button" class="equal-sign" data-action="equals">=</button>
+            </div>
+        </section>
+
+        <aside class="converter-panel" aria-label="Unit converters">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">Converter</p>
+                    <h2>Units & Currency</h2>
+                </div>
+                <span class="converter-status" id="converter-status">Ready</span>
+            </div>
+
+            <div class="converter-grid">
+                <label>
+                    Quantity
+                    <select id="converter-type"></select>
+                </label>
+
+                <label>
+                    Amount
+                    <input type="number" id="converter-input" value="1" step="any">
+                </label>
+
+                <label>
+                    From
+                    <select id="converter-from"></select>
+                </label>
+
+                <button type="button" class="swap-btn" id="converter-swap" aria-label="Swap units">Swap</button>
+
+                <label>
+                    To
+                    <select id="converter-to"></select>
+                </label>
+
+                <div class="converter-result">
+                    <span id="converter-result">1</span>
+                    <small id="converter-detail">Choose units to convert.</small>
+                </div>
+            </div>
+
+        </aside>
+    </main>
+</body>
+</html>
