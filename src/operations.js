@@ -13,17 +13,51 @@
             }
         },
         '^': { precedence: 4, associativity: 'right', args: 2, run: (a, b) => Math.pow(a, b) },
+        'mod': { precedence: 3, associativity: 'left', args: 2, run: (a, b) => {
+            if (b === 0) throw new Error('Cannot divide by zero');
+            return a - (b * Math.floor(a / b));
+        } },
         'u-': { precedence: 5, associativity: 'right', args: 1, run: (a) => -a },
         '%': { precedence: 6, associativity: 'left', args: 1, run: (a) => a / 100 }
     };
+
+    function factorial(value) {
+        if (!Number.isInteger(value) || value < 0) throw new Error('Invalid factorial');
+        if (value > 170) throw new Error('Number too large');
+
+        let result = 1;
+        for (let n = 2; n <= value; n += 1) {
+            result *= n;
+        }
+        return result;
+    }
 
     const FUNCTIONS = {
         sin: (value, mode) => Math.sin(toRadians(value, mode)),
         cos: (value, mode) => Math.cos(toRadians(value, mode)),
         tan: (value, mode) => Math.tan(toRadians(value, mode)),
+        asin: (value, mode) => {
+            if (value < -1 || value > 1) throw new Error('Domain error');
+            return fromRadians(Math.asin(value), mode);
+        },
+        acos: (value, mode) => {
+            if (value < -1 || value > 1) throw new Error('Domain error');
+            return fromRadians(Math.acos(value), mode);
+        },
+        atan: (value, mode) => fromRadians(Math.atan(value), mode),
+        sinh: (value) => Math.sinh(value),
+        cosh: (value) => Math.cosh(value),
+        tanh: (value) => Math.tanh(value),
         sqrt: (value) => {
             if (value < 0) throw new Error('Invalid square root');
             return Math.sqrt(value);
+        },
+        cbrt: (value) => Math.cbrt(value),
+        abs: (value) => Math.abs(value),
+        exp: (value) => Math.exp(value),
+        inv: (value) => {
+            if (value === 0) throw new Error('Cannot divide by zero');
+            return 1 / value;
         },
         log: (value) => {
             if (value <= 0) throw new Error('Invalid logarithm');
@@ -39,12 +73,16 @@
         return mode === 'DEG' ? value * (Math.PI / 180) : value;
     }
 
+    function fromRadians(value, mode) {
+        return mode === 'DEG' ? value * (180 / Math.PI) : value;
+    }
+
     function isNumberToken(token) {
         return /^\d*\.?\d+(e[+-]?\d+)?$/i.test(token);
     }
 
     function isValueToken(token) {
-        return isNumberToken(token) || token === 'pi' || token === 'e' || token === ')';
+        return isNumberToken(token) || token === 'pi' || token === 'e' || token === ')' || token === '!';
     }
 
     function addImplicitMultiplication(tokens, token) {
@@ -92,7 +130,7 @@
                     index += 1;
                 }
 
-                if (!FUNCTIONS[word] && word !== 'pi' && word !== 'e') {
+                if (!FUNCTIONS[word] && word !== 'pi' && word !== 'e' && word !== 'mod') {
                     throw new Error('Unknown function');
                 }
 
@@ -101,7 +139,7 @@
                 continue;
             }
 
-            if ('+-*/^()%'.includes(char)) {
+            if ('+-*/^()%!'.includes(char)) {
                 addImplicitMultiplication(tokens, char);
                 tokens.push(char);
                 index += 1;
@@ -126,6 +164,8 @@
                 stack.push(token);
             } else if (token === '(') {
                 stack.push(token);
+            } else if (token === '!') {
+                output.push(token);
             } else if (token === ')') {
                 while (stack.length && stack[stack.length - 1] !== '(') {
                     output.push(stack.pop());
@@ -185,6 +225,9 @@
                 stack.push(Math.PI);
             } else if (token === 'e') {
                 stack.push(Math.E);
+            } else if (token === '!') {
+                if (!stack.length) throw new Error('Missing operand');
+                stack.push(factorial(stack.pop()));
             } else if (FUNCTIONS[token]) {
                 if (!stack.length) throw new Error('Missing function value');
                 stack.push(FUNCTIONS[token](stack.pop(), angleMode));

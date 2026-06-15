@@ -28,53 +28,87 @@
                     <h1>Calci</h1>
                 </div>
                 <div class="control-group">
-                    <button type="button" class="mode-toggle" id="angle-mode">DEG</button>
-                    <button type="button" class="mode-toggle" id="sound-toggle" aria-label="Toggle click sound">Sound</button>
+                    <button type="button" class="mode-toggle" id="angle-mode" aria-label="Toggle angle mode">DEG</button>
+                    <button type="button" class="mode-toggle" id="theme-toggle" aria-label="Toggle theme">&#9789; Dark</button>
+                    <button type="button" class="mode-toggle" id="sound-toggle" aria-label="Toggle click sound">&#128266; Sound</button>
                 </div>
             </div>
 
             <div class="calculator-screen-container" aria-live="polite">
+                <span class="memory-indicator" id="memory-indicator" aria-hidden="true">M</span>
                 <div class="history-screen" id="history" aria-label="Calculation history"></div>
                 <input type="text" class="calculator-screen" id="display" value="0" disabled aria-label="Current expression">
+                <div class="screen-tools">
+                    <button type="button" class="chip" data-action="answer">Ans</button>
+                    <button type="button" class="chip" id="copy-result" aria-label="Copy result">Copy</button>
+                    <button type="button" class="chip" id="history-toggle" aria-expanded="false">History</button>
+                </div>
+            </div>
+
+            <div class="memory-row" aria-label="Memory functions">
+                <button type="button" class="memory" data-action="mem-clear">MC</button>
+                <button type="button" class="memory" data-action="mem-recall">MR</button>
+                <button type="button" class="memory" data-action="mem-add">M+</button>
+                <button type="button" class="memory" data-action="mem-sub">M&minus;</button>
+                <button type="button" class="memory" data-action="mem-store">MS</button>
             </div>
 
             <div class="calculator-keys">
+                <button type="button" class="science toggle" id="second-toggle">2nd</button>
+                <button type="button" class="science" data-action="constant" data-value="pi">&pi;</button>
+                <button type="button" class="science" data-action="constant" data-value="e">e</button>
                 <button type="button" class="utility" data-action="clear">AC</button>
                 <button type="button" class="utility" data-action="delete">DEL</button>
-                <button type="button" class="utility" data-action="sign">+/-</button>
-                <button type="button" class="science" data-action="percent">%</button>
                 <button type="button" class="operator" data-action="operator" data-value="/">&#247;</button>
 
-                <button type="button" class="science" data-action="function" data-value="sin">sin</button>
-                <button type="button" class="science" data-action="function" data-value="cos">cos</button>
-                <button type="button" class="science" data-action="function" data-value="tan">tan</button>
-                <button type="button" class="science" data-action="function" data-value="sqrt">&radic;</button>
+                <button type="button" class="science swap" data-action="function" data-value="sin"
+                    data-alt-action="function" data-alt-value="asin" data-alt-label="sin&#8315;&#185;">sin</button>
+                <button type="button" class="science swap" data-action="function" data-value="cos"
+                    data-alt-action="function" data-alt-value="acos" data-alt-label="cos&#8315;&#185;">cos</button>
+                <button type="button" class="science swap" data-action="function" data-value="tan"
+                    data-alt-action="function" data-alt-value="atan" data-alt-label="tan&#8315;&#185;">tan</button>
+                <button type="button" class="science" data-action="operator" data-value="^">x<sup>y</sup></button>
+                <button type="button" class="science" data-action="operator" data-value="mod">mod</button>
                 <button type="button" class="operator" data-action="operator" data-value="*">&#215;</button>
 
-                <button type="button" class="science" data-action="function" data-value="log">log</button>
-                <button type="button" class="science" data-action="function" data-value="ln">ln</button>
-                <button type="button" class="science" data-action="operator" data-value="^">x<sup>y</sup></button>
-                <button type="button" class="science" data-action="paren" data-value="(">(</button>
-                <button type="button" class="science" data-action="paren" data-value=")">)</button>
+                <button type="button" class="science swap" data-action="function" data-value="ln"
+                    data-alt-action="insert" data-alt-value="e^" data-alt-label="e&lt;sup&gt;x&lt;/sup&gt;">ln</button>
+                <button type="button" class="science swap" data-action="function" data-value="log"
+                    data-alt-action="insert" data-alt-value="10^" data-alt-label="10&lt;sup&gt;x&lt;/sup&gt;">log</button>
+                <button type="button" class="science swap" data-action="function" data-value="sqrt"
+                    data-alt-action="insert" data-alt-value="^2" data-alt-label="x&sup2;">&radic;</button>
+                <button type="button" class="science" data-action="insert" data-value="!">x!</button>
+                <button type="button" class="science" data-action="unary" data-value="inv">1/x</button>
+                <button type="button" class="operator" data-action="operator" data-value="-">-</button>
 
                 <button type="button" data-action="digit" data-value="7">7</button>
                 <button type="button" data-action="digit" data-value="8">8</button>
                 <button type="button" data-action="digit" data-value="9">9</button>
-                <button type="button" class="science" data-action="constant" data-value="pi">&pi;</button>
-                <button type="button" class="operator" data-action="operator" data-value="-">-</button>
+                <button type="button" class="science" data-action="paren" data-value="(">(</button>
+                <button type="button" class="science" data-action="paren" data-value=")">)</button>
+                <button type="button" class="operator" data-action="operator" data-value="+">+</button>
 
                 <button type="button" data-action="digit" data-value="4">4</button>
                 <button type="button" data-action="digit" data-value="5">5</button>
                 <button type="button" data-action="digit" data-value="6">6</button>
-                <button type="button" class="science" data-action="constant" data-value="e">e</button>
-                <button type="button" class="operator" data-action="operator" data-value="+">+</button>
+                <button type="button" class="science" data-action="unary" data-value="abs">|x|</button>
+                <button type="button" class="science" data-action="percent">%</button>
+                <button type="button" class="utility" data-action="sign">+/-</button>
 
                 <button type="button" data-action="digit" data-value="1">1</button>
                 <button type="button" data-action="digit" data-value="2">2</button>
                 <button type="button" data-action="digit" data-value="3">3</button>
-                <button type="button" class="zero-btn" data-action="digit" data-value="0">0</button>
+                <button type="button" data-action="digit" data-value="0">0</button>
                 <button type="button" data-action="decimal" data-value=".">.</button>
                 <button type="button" class="equal-sign" data-action="equals">=</button>
+            </div>
+
+            <div class="history-panel" id="history-panel" hidden>
+                <div class="history-panel-head">
+                    <span>Recent calculations</span>
+                    <button type="button" class="chip" id="history-clear">Clear</button>
+                </div>
+                <ul class="history-list" id="history-list"></ul>
             </div>
         </section>
 
