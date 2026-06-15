@@ -3,6 +3,7 @@
     --ink: #f8fafc;
     --soft-ink: #aeb9c8;
     --shell: rgba(13, 18, 28, 0.86);
+    --shell-border: rgba(255, 255, 255, 0.18);
     --screen: rgba(255, 255, 255, 0.08);
     --key: rgba(255, 255, 255, 0.1);
     --key-hover: rgba(255, 255, 255, 0.18);
@@ -13,6 +14,33 @@
     --utility: rgba(238, 242, 247, 0.9);
     --utility-hover: #ffffff;
     --danger: #fb7185;
+    --accent: #5eead4;
+    --bg-base: linear-gradient(135deg, rgba(8, 13, 28, 0.96), rgba(16, 24, 39, 0.9)),
+        linear-gradient(45deg, #0f766e, #7c3aed 48%, #f97316);
+    --float-ink: rgba(255, 255, 255, 0.16);
+    --grid-line: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+    --ink: #10243a;
+    --soft-ink: #5b6b80;
+    --shell: rgba(255, 255, 255, 0.78);
+    --shell-border: rgba(15, 23, 42, 0.1);
+    --screen: rgba(255, 255, 255, 0.55);
+    --key: rgba(255, 255, 255, 0.72);
+    --key-hover: rgba(255, 255, 255, 0.95);
+    --science: rgba(13, 148, 136, 0.16);
+    --science-hover: rgba(13, 148, 136, 0.28);
+    --operator: #f97316;
+    --operator-hover: #fb923c;
+    --utility: rgba(15, 23, 42, 0.82);
+    --utility-hover: #0f172a;
+    --accent: #0d9488;
+    --bg-base: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(226, 232, 240, 0.4)),
+        linear-gradient(45deg, #99f6e4, #c4b5fd 50%, #fed7aa);
+    --float-ink: rgba(15, 23, 42, 0.12);
+    --grid-line: rgba(15, 23, 42, 0.05);
 }
 
 * {
@@ -23,9 +51,9 @@
 
 body {
     align-items: center;
-    background:
-        linear-gradient(135deg, rgba(8, 13, 28, 0.96), rgba(16, 24, 39, 0.9)),
-        linear-gradient(45deg, #0f766e, #7c3aed 48%, #f97316);
+    background: var(--bg-base);
+    background-size: 100% 100%, 220% 220%;
+    animation: drift-bg 26s ease infinite;
     color: var(--ink);
     display: flex;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -33,12 +61,23 @@ body {
     min-height: 100vh;
     overflow: auto;
     padding: 16px;
+    transition: color 0.4s ease;
+}
+
+@keyframes drift-bg {
+    0%, 100% {
+        background-position: 0% 0%, 0% 50%;
+    }
+
+    50% {
+        background-position: 0% 0%, 100% 50%;
+    }
 }
 
 body::before {
     background-image:
-        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
     background-size: 44px 44px;
     content: "";
     inset: 0;
@@ -55,7 +94,7 @@ body::before {
 
 .floating-background span {
     animation: float-symbol var(--duration) linear infinite;
-    color: rgba(255, 255, 255, 0.16);
+    color: var(--float-ink);
     font-size: clamp(2.25rem, 8vw, 6rem);
     font-weight: 800;
     left: var(--x);
@@ -98,9 +137,10 @@ body::before {
 .converter-panel {
     backdrop-filter: blur(22px);
     background: var(--shell);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid var(--shell-border);
     border-radius: 30px;
     box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
+    transition: background 0.4s ease, border-color 0.4s ease;
 }
 
 .calculator {
@@ -117,7 +157,7 @@ body::before {
 }
 
 .eyebrow {
-    color: #5eead4;
+    color: var(--accent);
     font-size: 0.76rem;
     font-weight: 750;
     letter-spacing: 0.16em;
@@ -150,7 +190,7 @@ h1 {
     background:
         linear-gradient(135deg, rgba(94, 234, 212, 0.14), rgba(255, 176, 32, 0.08)),
         var(--screen);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--shell-border);
     border-radius: 22px;
     display: flex;
     flex-direction: column;
@@ -158,6 +198,161 @@ h1 {
     justify-content: flex-end;
     min-height: clamp(96px, 17vh, 126px);
     padding: 18px;
+    position: relative;
+    transition: border-color 0.4s ease, background 0.4s ease;
+}
+
+.memory-indicator {
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    left: 18px;
+    letter-spacing: 0.08em;
+    opacity: 0;
+    position: absolute;
+    top: 12px;
+    transition: opacity 0.2s ease;
+}
+
+.memory-indicator.is-active {
+    opacity: 1;
+}
+
+.calculator-screen.is-error {
+    color: var(--danger);
+}
+
+.screen-tools {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.chip {
+    aspect-ratio: auto;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--shell-border);
+    border-radius: 999px;
+    color: var(--ink);
+    font-size: 0.74rem;
+    font-weight: 700;
+    min-height: 30px;
+    padding: 0 14px;
+}
+
+.chip.is-active {
+    background: var(--science-hover);
+    color: var(--ink);
+}
+
+.memory-row {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin-top: 12px;
+}
+
+.memory {
+    background: rgba(124, 58, 237, 0.22);
+    border: 1px solid rgba(124, 58, 237, 0.28);
+    color: var(--ink);
+    font-size: 0.92rem;
+    min-height: 40px;
+}
+
+.memory:hover {
+    background: rgba(124, 58, 237, 0.36);
+}
+
+.toggle.is-active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #07201c;
+}
+
+.history-panel {
+    background: rgba(0, 0, 0, 0.16);
+    border: 1px solid var(--shell-border);
+    border-radius: 18px;
+    margin-top: 12px;
+    max-height: 240px;
+    overflow: hidden auto;
+    padding: 12px;
+}
+
+.history-panel-head {
+    align-items: center;
+    color: var(--soft-ink);
+    display: flex;
+    font-size: 0.82rem;
+    font-weight: 700;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.history-list {
+    display: grid;
+    gap: 6px;
+    list-style: none;
+}
+
+.history-entry {
+    aspect-ratio: auto;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--shell-border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 44px;
+    padding: 8px 12px;
+    text-align: right;
+    width: 100%;
+}
+
+.history-expr {
+    color: var(--soft-ink);
+    font-size: 0.86rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.history-res {
+    color: var(--ink);
+    font-size: 1.05rem;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.history-empty {
+    color: var(--soft-ink);
+    font-size: 0.85rem;
+    list-style: none;
+    padding: 6px 2px;
+}
+
+.toast {
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid var(--shell-border);
+    border-radius: 14px;
+    bottom: 26px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    color: #f8fafc;
+    font-size: 0.9rem;
+    font-weight: 700;
+    left: 50%;
+    opacity: 0;
+    padding: 12px 18px;
+    pointer-events: none;
+    position: fixed;
+    transform: translate(-50%, 12px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 20;
+}
+
+.toast.is-visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
 }
 
 .history-screen {
@@ -203,12 +398,32 @@ button {
     justify-content: center;
     min-height: clamp(42px, 7vh, 58px);
     min-width: 0;
-    transition: background-color 0.18s ease, transform 0.1s ease, border-color 0.18s ease;
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.18s ease, transform 0.12s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.calculator-keys button::after {
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 10%, transparent 11%);
+    content: "";
+    inset: 0;
+    opacity: 0;
+    position: absolute;
+    transform: scale(8);
+    transition: transform 0.4s ease, opacity 0.7s ease;
+}
+
+.calculator-keys button:active::after {
+    opacity: 0.45;
+    transform: scale(0);
+    transition: 0s;
 }
 
 button:hover {
     background: var(--key-hover);
     border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
 }
 
 button:focus-visible {
@@ -226,7 +441,7 @@ button sup {
 
 .science {
     background: var(--science);
-    color: #bffcf4;
+    color: var(--ink);
 }
 
 .science:hover {
@@ -238,6 +453,10 @@ button sup {
     background: var(--operator);
     color: #17120a;
     font-size: 1.45rem;
+}
+
+.equal-sign {
+    background: linear-gradient(135deg, var(--operator), var(--operator-hover));
 }
 
 .operator:hover,

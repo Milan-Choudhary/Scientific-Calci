@@ -5,8 +5,22 @@
     const display = document.querySelector('#display');
     const historyDisplay = document.querySelector('#history');
     const keypad = document.querySelector('.calculator-keys');
+    const memoryRow = document.querySelector('.memory-row');
+    const screenTools = document.querySelector('.screen-tools');
     const angleModeButton = document.querySelector('#angle-mode');
     const soundToggle = document.querySelector('#sound-toggle');
+    const themeToggle = document.querySelector('#theme-toggle');
+    const secondToggle = document.querySelector('#second-toggle');
+    const copyResultButton = document.querySelector('#copy-result');
+    const historyToggle = document.querySelector('#history-toggle');
+    const historyPanel = document.querySelector('#history-panel');
+    const historyList = document.querySelector('#history-list');
+    const historyClear = document.querySelector('#history-clear');
+    const memoryIndicator = document.querySelector('#memory-indicator');
+    const swapButtons = Array.from(document.querySelectorAll('.science.swap'));
+
+    const STORAGE_KEY = 'scientific-calci-settings';
+    const MAX_HISTORY = 30;
     const converterType = document.querySelector('#converter-type');
     const converterInput = document.querySelector('#converter-input');
     const converterFrom = document.querySelector('#converter-from');
@@ -17,7 +31,7 @@
     const converterStatus = document.querySelector('#converter-status');
 
     const displayMap = {
-        '*': 'x',
+        '*': '\u00d7',
         '/': '\u00f7',
         pi: '\u03c0',
         sqrt: '\u221a'
@@ -122,8 +136,12 @@
 
     function normalizeForDisplay(expression) {
         return expression
+            .replace(/asin/g, 'sin\u207b\u00b9')
+            .replace(/acos/g, 'cos\u207b\u00b9')
+            .replace(/atan/g, 'tan\u207b\u00b9')
             .replace(/sqrt/g, displayMap.sqrt)
             .replace(/pi/g, displayMap.pi)
+            .replace(/mod/g, ' mod ')
             .replace(/\*/g, displayMap['*'])
             .replace(/\//g, displayMap['/']);
     }
@@ -132,7 +150,60 @@
         display.value = state.expression ? normalizeForDisplay(state.expression) : state.result;
         historyDisplay.innerText = state.history;
         angleModeButton.innerText = state.angleMode;
-        soundToggle.innerText = state.soundEnabled ? 'Sound' : 'Muted';
+        soundToggle.innerText = state.soundEnabled ? '\ud83d\udd0a Sound' : '\ud83d\udd07 Muted';
+        themeToggle.innerText = state.theme === 'dark' ? '\u263d Dark' : '\u2600 Light';
+        display.classList.toggle('is-error', state.hasError);
+        memoryIndicator.classList.toggle('is-active', state.memory !== 0);
+    }
+
+    let toastTimer = null;
+
+    function showToast(message) {
+        let toast = document.querySelector('.toast');
+
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.className = 'toast';
+            document.body.appendChild(toast);
+        }
+
+        toast.innerText = message;
+        toast.classList.add('is-visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 1600);
+    }
+
+    function applyTheme() {
+        document.documentElement.dataset.theme = state.theme;
+    }
+
+    function persistSettings() {
+        try {
+            const payload = {
+                angleMode: state.angleMode,
+                soundEnabled: state.soundEnabled,
+                theme: state.theme,
+                memory: state.memory,
+                historyLog: state.historyLog
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        } catch (error) {
+            /* localStorage may be unavailable; ignore */
+        }
+    }
+
+    function loadSettings() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+            if (saved.angleMode === 'DEG' || saved.angleMode === 'RAD') state.angleMode = saved.angleMode;
+            if (typeof saved.soundEnabled === 'boolean') state.soundEnabled = saved.soundEnabled;
+            if (saved.theme === 'dark' || saved.theme === 'light') state.theme = saved.theme;
+            if (typeof saved.memory === 'number' && Number.isFinite(saved.memory)) state.memory = saved.memory;
+            if (Array.isArray(saved.historyLog)) state.historyLog = saved.historyLog.slice(0, MAX_HISTORY);
+        } catch (error) {
+            /* corrupt or unavailable storage; keep defaults */
+        }
     }
 
     function playClickSound(kind = 'tap') {
@@ -223,7 +294,7 @@
             return;
         }
 
-        const functions = ['sqrt(', 'sin(', 'cos(', 'tan(', 'log(', 'ln('];
+        const functions = ['sqrt(', 'sin(', 'cos(', 'tan(', 'asin(', 'acos(', 'atan(', 'log(', 'ln(', 'abs(', 'inv(', '10^', 'e^', 'mod'];
         const found = functions.find((name) => state.expression.endsWith(name));
 
         state.expression = found
@@ -255,9 +326,11 @@
 
             state.history = `${normalizeForDisplay(cleanExpression)} =`;
             state.result = formatResult(result);
+            state.lastAnswer = state.result;
             state.expression = '';
             state.justSolved = true;
             state.hasError = false;
+            recordHistory(normalizeForDisplay(cleanExpression), state.result);
         } catch (error) {
             state.history = normalizeForDisplay(state.expression);
             state.result = 'Error';
@@ -273,12 +346,181 @@
         playClickSound();
         state.angleMode = state.angleMode === 'DEG' ? 'RAD' : 'DEG';
         updateDisplay();
+        persistSettings();
     }
 
     function toggleSound() {
         state.soundEnabled = !state.soundEnabled;
         if (state.soundEnabled) playClickSound();
         updateDisplay();
+        persistSettings();
+    }
+
+    function toggleTheme() {
+        playClickSound();
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+        applyTheme();
+        updateDisplay();
+        persistSettings();
+    }
+
+    function toggleSecondMode() {
+        playClickSound();
+        state.secondMode = !state.secondMode;
+        secondToggle.classList.toggle('is-active', state.secondMode);
+
+        swapButtons.forEach((button) => {
+            const useAlt = state.secondMode;
+            const action = useAlt ? button.dataset.altAction : button.dataset.action;
+            const value = useAlt ? button.dataset.altValue : button.dataset.value;
+            const label = useAlt ? button.dataset.altLabel : button.dataset.baseLabel;
+
+            button.dataset.activeAction = action;
+            button.dataset.activeValue = value;
+            button.innerHTML = label;
+        });
+    }
+
+    function insertPostfix(value) {
+        if (state.hasError) resetCalculator();
+
+        if (state.justSolved) {
+            state.expression = state.result;
+            state.justSolved = false;
+        }
+
+        state.expression += value;
+        updateDisplay();
+    }
+
+    function applyUnary(name) {
+        if (state.hasError) resetCalculator();
+
+        if (state.justSolved) {
+            state.expression = `${name}(${state.result})`;
+            state.justSolved = false;
+        } else {
+            state.expression += `${name}(`;
+        }
+
+        updateDisplay();
+    }
+
+    function insertAnswer() {
+        prepareForInput();
+        state.expression += state.lastAnswer;
+        updateDisplay();
+    }
+
+    function currentValue() {
+        if (state.expression) {
+            try {
+                return evaluateExpression(state.expression.replace(/\($/, ''), state.angleMode);
+            } catch (error) {
+                return null;
+            }
+        }
+
+        const fromResult = Number(state.lastAnswer);
+        return Number.isFinite(fromResult) ? fromResult : null;
+    }
+
+    function handleMemory(action) {
+        if (action === 'mem-clear') {
+            state.memory = 0;
+            showToast('Memory cleared');
+        } else if (action === 'mem-recall') {
+            prepareForInput();
+            state.expression += formatResult(state.memory);
+            updateDisplay();
+        } else {
+            const value = currentValue();
+
+            if (value === null || !Number.isFinite(value)) {
+                showToast('Nothing to store');
+                return;
+            }
+
+            if (action === 'mem-add') state.memory += value;
+            else if (action === 'mem-sub') state.memory -= value;
+            else if (action === 'mem-store') state.memory = value;
+
+            showToast(`Memory: ${formatResult(state.memory)}`);
+        }
+
+        updateDisplay();
+        persistSettings();
+    }
+
+    function recordHistory(expression, result) {
+        state.historyLog.unshift({ expression, result });
+        state.historyLog = state.historyLog.slice(0, MAX_HISTORY);
+        renderHistory();
+        persistSettings();
+    }
+
+    function renderHistory() {
+        historyList.innerHTML = '';
+
+        if (!state.historyLog.length) {
+            const empty = document.createElement('li');
+            empty.className = 'history-empty';
+            empty.innerText = 'No calculations yet.';
+            historyList.appendChild(empty);
+            return;
+        }
+
+        state.historyLog.forEach((entry) => {
+            const item = document.createElement('li');
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'history-entry';
+            button.innerHTML = `<span class="history-expr">${entry.expression}</span>` +
+                `<span class="history-res">= ${entry.result}</span>`;
+            button.addEventListener('click', () => {
+                playClickSound();
+                prepareForInput();
+                state.expression += entry.result;
+                state.justSolved = false;
+                updateDisplay();
+            });
+            item.appendChild(button);
+            historyList.appendChild(item);
+        });
+    }
+
+    function clearHistory() {
+        playClickSound();
+        state.historyLog = [];
+        renderHistory();
+        persistSettings();
+        showToast('History cleared');
+    }
+
+    function toggleHistory() {
+        playClickSound();
+        const open = historyPanel.hasAttribute('hidden');
+
+        if (open) {
+            historyPanel.removeAttribute('hidden');
+        } else {
+            historyPanel.setAttribute('hidden', '');
+        }
+
+        historyToggle.setAttribute('aria-expanded', String(open));
+        historyToggle.classList.toggle('is-active', open);
+    }
+
+    async function copyResult() {
+        playClickSound();
+        const text = state.expression ? normalizeForDisplay(state.expression) : state.result;
+
+        try {
+            await navigator.clipboard.writeText(text);
+            showToast('Copied to clipboard');
+        } catch (error) {
+            showToast('Copy not available');
+        }
     }
 
     function handleAction(action, value) {
@@ -302,6 +544,15 @@
             case 'percent':
                 appendValue('%');
                 break;
+            case 'insert':
+                insertPostfix(value);
+                break;
+            case 'unary':
+                applyUnary(value);
+                break;
+            case 'answer':
+                insertAnswer();
+                break;
             case 'clear':
                 resetCalculator();
                 break;
@@ -313,6 +564,13 @@
                 break;
             case 'equals':
                 solveExpression();
+                break;
+            case 'mem-clear':
+            case 'mem-recall':
+            case 'mem-add':
+            case 'mem-sub':
+            case 'mem-store':
+                handleMemory(action);
                 break;
         }
     }
@@ -431,16 +689,32 @@
         updateConverter();
     }
 
-    keypad.addEventListener('click', (event) => {
+    function onKeyButtonClick(event) {
         const button = event.target.closest('button');
 
-        if (!button) return;
+        if (!button || !button.dataset.action) return;
 
+        const action = button.dataset.activeAction || button.dataset.action;
+        const value = button.dataset.activeValue || button.dataset.value;
+        handleAction(action, value);
+    }
+
+    keypad.addEventListener('click', onKeyButtonClick);
+    memoryRow.addEventListener('click', onKeyButtonClick);
+    screenTools.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
         handleAction(button.dataset.action, button.dataset.value);
     });
 
     angleModeButton.addEventListener('click', toggleAngleMode);
     soundToggle.addEventListener('click', toggleSound);
+    themeToggle.addEventListener('click', toggleTheme);
+    secondToggle.addEventListener('click', toggleSecondMode);
+    copyResultButton.addEventListener('click', copyResult);
+    display.addEventListener('click', copyResult);
+    historyToggle.addEventListener('click', toggleHistory);
+    historyClear.addEventListener('click', clearHistory);
     converterType.addEventListener('change', () => {
         playClickSound();
         populateConverterUnits();
@@ -475,9 +749,20 @@
             resetCalculator();
         } else if (key === '%') {
             appendValue('%');
+        } else if (key === '!') {
+            insertPostfix('!');
         }
     });
 
+    swapButtons.forEach((button) => {
+        button.dataset.baseLabel = button.innerHTML;
+        button.dataset.activeAction = button.dataset.action;
+        button.dataset.activeValue = button.dataset.value;
+    });
+
+    loadSettings();
+    applyTheme();
+    renderHistory();
     populateConverterTypes();
     populateConverterUnits();
     updateDisplay();
